@@ -89,7 +89,9 @@ fn process_request_db(conn: Connection) {
 /************************************************************************************************/
 
 fn insert_env_variables(conn: &Connection) {
-    match conn.prepare("insert into cgi_param(type, name, index, value) values('env', $1, 0, $2)") {
+    match conn.prepare(
+        "insert into t_cgi_param(f_type, f_name, f_index, f_value) values('env', $1, 0, $2)",
+    ) {
         Err(e) => show_error(
             &format!(
                 "ERROR -> insert_env_variables -> prepare insert into: {}",
@@ -118,7 +120,7 @@ fn insert_env_variables(conn: &Connection) {
 
 fn get_cgi_param(conn: &Connection, ptype: &str, name: &str) -> Option<String> {
     match conn.query(
-        "select value from cgi_param where type = $1 and name = $2 and index = 0",
+        "select f_value from t_cgi_param where f_type = $1 and f_name = $2 and f_index = 0",
         &[&ptype, &name],
     ) {
         Err(e) => {
@@ -132,7 +134,7 @@ fn get_cgi_param(conn: &Connection, ptype: &str, name: &str) -> Option<String> {
             if rows.is_empty() {
                 None
             } else {
-                let value: String = rows.get(0).get("value");
+                let value: String = rows.get(0).get("f_value");
                 Some(value)
             }
         }
@@ -166,7 +168,7 @@ fn output_response_content(conn: &Connection) {
 
 fn output_response_headers(conn: &Connection) {
     match conn.query(
-        "select name, value from cgi_param where type = 'response.header'",
+        "select f_name, f_value from t_cgi_param where f_type = 'response.header'",
         &[],
     ) {
         Err(e) => show_error(
@@ -178,8 +180,8 @@ fn output_response_headers(conn: &Connection) {
         ),
         Ok(rows) => {
             for row in rows.iter() {
-                let header: String = row.get("name");
-                let value: String = row.get("value");
+                let header: String = row.get("f_name");
+                let value: String = row.get("f_value");
                 println!("{}: {}", header, value);
             }
         }
@@ -190,7 +192,7 @@ fn output_response_headers(conn: &Connection) {
 
 fn output_response_text(conn: &Connection) {
     match conn.query(
-        "select content, new_line from cgi_response_text order by index",
+        "select f_content, f_new_line from t_cgi_response_text order by f_index",
         &[],
     ) {
         Err(e) => show_error(
@@ -202,14 +204,14 @@ fn output_response_text(conn: &Connection) {
         ),
         Ok(rows) => {
             for row in rows.iter() {
-                let content: String = match row.get_opt("content") {
+                let content: String = match row.get_opt("f_content") {
                     Some(res) => match res {
                         Err(_) => String::new(), // content is null (most likely)
                         Ok(var) => var,
                     },
                     None => String::new(),
                 };
-                let new_line: bool = row.get("new_line");
+                let new_line: bool = row.get("f_new_line");
                 print!("{}", content);
                 if new_line {
                     println!("");

@@ -5,6 +5,6 @@ begin
   -- end of the session.
 
   -- Update earlier created request log record.
-  update cgi.request_log set final = now() where rid = cgi.get_request_id();
+  update cgi.t_request_log set f_final = now() where f_rid = cgi.get_request_id();
 end;
 $$ language plpgsql;

@@ -1,11 +1,11 @@
-create or replace function cgi.get_env_var(var_name cgi_param.name%TYPE)
-  returns cgi_param.value%TYPE as $$
+create or replace function cgi.get_env_var(var_name t_cgi_param.f_name%TYPE)
+  returns t_cgi_param.f_value%TYPE as $$
 declare
-  val cgi_param.value%TYPE := null;
+  val t_cgi_param.f_value%TYPE := null;
 begin
   -- Retrieve the environment variable value.
-  select value into val from cgi_param
-    where type = 'env' and name = var_name and index = 0;
+  select f_value into val from t_cgi_param
+    where f_type = 'env' and f_name = var_name and f_index = 0;
 
   -- Return it. If not found then NULL will be returned.
   return val;

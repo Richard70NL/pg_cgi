@@ -1,1 +1,1 @@
-\i views/req_log.sql
+\i views/request_log.sql
