@@ -14,8 +14,15 @@ fn main() {
     #[cfg(feature = "debug_utils")]
     debug_utils::handle_debug_utils();
 
-    let path_info = get_env_var("PATH_INFO", "Could not determine PATH_INFO!");
-    process_request(path_info);
+    match env::var("PATH_INFO") {
+        Ok(path_info) => process_request(path_info),
+        Err(_) => {
+            let mut script_name =
+                get_env_var("SCRIPT_NAME", "Script name could not be determined!");
+            script_name.push_str("/");
+            redirect_to(script_name);
+        }
+    }
 }
 
 /************************************************************************************************/
@@ -236,6 +243,16 @@ fn show_error(message: &str, terminate: bool) {
     if terminate {
         exit(0);
     }
+}
+
+/************************************************************************************************/
+
+fn redirect_to(location: String) {
+    println!("Status: 301 Moved Permanently");
+    println!("Location: {}", location);
+    println!("Content-type: text/plain");
+    println!("");
+    println!("Please redirect to: {}", location);
 }
 
 /************************************************************************************************/
