@@ -1,0 +1,1 @@
+\i schemas/cgi.sql

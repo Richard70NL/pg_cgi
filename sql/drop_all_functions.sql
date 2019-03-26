@@ -1,0 +1,11 @@
+drop function cgi.new_line;
+drop function cgi.println;
+drop function cgi.print;
+drop function cgi.set_content_type;
+drop function cgi.set_http_status;
+drop function cgi.finalize;
+drop function cgi.handle_request;
+drop function cgi.initialize;
+drop function cgi.get_request_id;
+drop function cgi.get_env_var;
+drop function cgi.create_temp_tables;

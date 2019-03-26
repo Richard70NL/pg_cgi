@@ -1,0 +1,13 @@
+[package]
+name = "pg_cgi"
+version = "0.1.0"
+authors = ["Richard70NL <richard@richard70.nl>"]
+edition = "2018"
+
+[features]
+default = ["debug_utils"]
+
+debug_utils = []
+
+[dependencies]
+postgres = "0.15.2"
