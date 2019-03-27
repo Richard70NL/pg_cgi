@@ -1,3 +1,4 @@
+drop function cgi.insert_cgi_param;
 drop function cgi.pg_show_all;
 drop function cgi.new_line;
 drop function cgi.println;

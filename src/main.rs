@@ -7,6 +7,7 @@ mod debug_utils;
 
 use postgres::{Connection, TlsMode};
 use std::{env, process::exit};
+use url::form_urlencoded::parse;
 
 /************************************************************************************************/
 
@@ -73,6 +74,8 @@ fn process_request_db(conn: Connection) {
     }
 
     insert_env_variables(&conn);
+    parse_query_string(&conn);
+    //parse_form_data();
 
     let mut do_handle_request = true;
 
@@ -143,6 +146,31 @@ fn insert_env_variables(conn: &Connection) {
                 }
             }
         }
+    }
+}
+
+/************************************************************************************************/
+
+fn parse_query_string(conn: &Connection) {
+    match env::var("QUERY_STRING") {
+        Ok(query) => {
+            for pair in parse(query.as_bytes()) {
+                let key = pair.0.to_string();
+                let value = pair.1.to_string();
+
+                match conn.execute(
+                    "select cgi.insert_cgi_param('query', $1, $2);",
+                    &[&key, &value],
+                ) {
+                    Err(e) => show_error(
+                        &format!("ERROR -> parse_query_string -> cgi.insert_cgi_param: {}", e),
+                        true,
+                    ),
+                    Ok(_) => (),
+                }
+            }
+        }
+        Err(_) => (),
     }
 }
 
