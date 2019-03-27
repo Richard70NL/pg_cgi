@@ -6,7 +6,7 @@ mod debug_utils;
 /************************************************************************************************/
 
 use postgres::{Connection, TlsMode};
-use std::{env, process::exit};
+use std::{env, io, io::prelude::*, process::exit};
 use url::form_urlencoded::parse;
 
 /************************************************************************************************/
@@ -75,7 +75,7 @@ fn process_request_db(conn: Connection) {
 
     insert_env_variables(&conn);
     parse_query_string(&conn);
-    //parse_form_data(&conn);
+    parse_form_data(&conn);
 
     let mut do_handle_request = true;
 
@@ -157,6 +157,37 @@ fn parse_query_string(conn: &Connection) {
                         true,
                     ),
                     Ok(_) => (),
+                }
+            }
+        }
+        Err(_) => (),
+    }
+}
+
+/************************************************************************************************/
+
+fn parse_form_data(conn: &Connection) {
+    match env::var("CONTENT_TYPE") {
+        Ok(content_type) => {
+            if content_type == "application/x-www-form-urlencoded" {
+                let mut stdin = io::stdin();
+                let mut buffer = String::new();
+                let _res = stdin.read_to_string(&mut buffer);
+
+                for pair in parse(buffer.as_bytes()) {
+                    let key = pair.0.to_string();
+                    let value = pair.1.to_string();
+
+                    match conn.execute(
+                        "select cgi.insert_cgi_param('form', $1, $2);",
+                        &[&key, &value],
+                    ) {
+                        Err(e) => show_error(
+                            &format!("ERROR -> parse_form_data -> cgi.insert_cgi_param: {}", e),
+                            true,
+                        ),
+                        Ok(_) => (),
+                    }
                 }
             }
         }
