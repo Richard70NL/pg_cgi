@@ -17,3 +17,4 @@ select cgi.create_temp_tables();
 \i functions/new_line.sql;
 \i functions/pg_show_all.sql;
 \i functions/insert_cgi_param.sql;
+\i functions/set_cgi_param.sql;
