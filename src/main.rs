@@ -122,12 +122,10 @@ fn process_request_db(conn: Connection) {
 /************************************************************************************************/
 
 fn insert_env_variables(conn: &Connection) {
-    match conn.prepare(
-        "insert into t_cgi_param(f_type, f_name, f_index, f_value) values('env', $1, 0, $2)",
-    ) {
+    match conn.prepare("select cgi.insert_cgi_param('env', $1, $2);") {
         Err(e) => show_error(
             &format!(
-                "ERROR -> insert_env_variables -> prepare insert into: {}",
+                "ERROR -> insert_env_variables -> prepare cgi.insert_cgi_param: {}",
                 e
             ),
             true,
@@ -137,7 +135,7 @@ fn insert_env_variables(conn: &Connection) {
                 match stmt.execute(&[&key, &value]) {
                     Err(e) => show_error(
                         &format!(
-                            "ERROR -> insert_env_variables -> executing insert into: {}",
+                            "ERROR -> insert_env_variables -> executing cgi.insert_cgi_param: {}",
                             e
                         ),
                         true,
