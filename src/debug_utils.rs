@@ -7,7 +7,7 @@ use std::{env, io, process::exit};
 pub fn handle_debug_utils() {
     match env::var("PATH_INFO") {
         Ok(val) => {
-            if val == "/debug_show_all" {
+            if val == "/cgi_show_all" {
                 debug_show_all();
                 exit(0);
             }

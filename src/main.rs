@@ -74,12 +74,35 @@ fn process_request_db(conn: Connection) {
 
     insert_env_variables(&conn);
 
-    match conn.execute("select cgi.handle_request();", &[]) {
-        Err(e) => show_error(
-            &format!("ERROR -> process_request_db -> cgi.handle_request: {}", e),
-            true,
-        ),
-        Ok(_) => (),
+    let mut do_handle_request = true;
+
+    #[cfg(feature = "debug_utils")]
+    {
+        match env::var("PATH_INFO") {
+            Ok(val) => {
+                if val == "/pg_show_all" {
+                    match conn.execute("select cgi.pg_show_all();", &[]) {
+                        Err(e) => show_error(
+                            &format!("ERROR -> process_request_db -> cgi.pg_show_all: {}", e),
+                            true,
+                        ),
+                        Ok(_) => (),
+                    };
+                    do_handle_request = false;
+                }
+            }
+            Err(_) => () // do nothing,
+        }
+    }
+
+    if do_handle_request {
+        match conn.execute("select cgi.handle_request();", &[]) {
+            Err(e) => show_error(
+                &format!("ERROR -> process_request_db -> cgi.handle_request: {}", e),
+                true,
+            ),
+            Ok(_) => (),
+        }
     }
 
     output_response_content(&conn);

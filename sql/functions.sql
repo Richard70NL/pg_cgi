@@ -15,3 +15,4 @@ select cgi.create_temp_tables();
 \i functions/print.sql;
 \i functions/println.sql;
 \i functions/new_line.sql;
+\i functions/pg_show_all.sql;
