@@ -75,7 +75,7 @@ fn process_request_db(conn: Connection) {
 
     insert_env_variables(&conn);
     parse_query_string(&conn);
-    //parse_form_data();
+    //parse_form_data(&conn);
 
     let mut do_handle_request = true;
 
@@ -122,27 +122,19 @@ fn process_request_db(conn: Connection) {
 /************************************************************************************************/
 
 fn insert_env_variables(conn: &Connection) {
-    match conn.prepare("select cgi.insert_cgi_param('env', $1, $2);") {
-        Err(e) => show_error(
-            &format!(
-                "ERROR -> insert_env_variables -> prepare cgi.insert_cgi_param: {}",
-                e
+    for (key, value) in env::vars() {
+        match conn.execute(
+            "select cgi.insert_cgi_param('env', $1, $2);",
+            &[&key, &value],
+        ) {
+            Err(e) => show_error(
+                &format!(
+                    "ERROR -> insert_env_variables -> cgi.insert_cgi_param: {}",
+                    e
+                ),
+                true,
             ),
-            true,
-        ),
-        Ok(stmt) => {
-            for (key, value) in env::vars() {
-                match stmt.execute(&[&key, &value]) {
-                    Err(e) => show_error(
-                        &format!(
-                            "ERROR -> insert_env_variables -> executing cgi.insert_cgi_param: {}",
-                            e
-                        ),
-                        true,
-                    ),
-                    Ok(_) => (),
-                }
-            }
+            Ok(_) => (),
         }
     }
 }
