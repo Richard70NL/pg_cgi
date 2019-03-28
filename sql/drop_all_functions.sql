@@ -1,3 +1,7 @@
+drop function cgi.get_query_value;
+drop function cgi.get_request_id;
+drop function cgi.get_env_var;
+drop function cgi.get_cgi_param_value;
 drop function cgi.validate_identifier;
 drop function cgi.path_info_to_public_function;
 drop function cgi.set_cgi_param;
@@ -11,6 +15,4 @@ drop function cgi.set_http_status;
 drop function cgi.finalize;
 drop function cgi.handle_request;
 drop function cgi.initialize;
-drop function cgi.get_request_id;
-drop function cgi.get_env_var;
 drop function cgi.create_temp_tables;

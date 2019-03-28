@@ -5,8 +5,6 @@ set client_min_messages to warning;
 -- and run it to allow all other function to compile
 select cgi.create_temp_tables();
 
-\i functions/get_env_var.sql
-\i functions/get_request_id.sql
 \i functions/initialize.sql
 \i functions/handle_request.sql
 \i functions/finalize.sql
@@ -20,3 +18,7 @@ select cgi.create_temp_tables();
 \i functions/set_cgi_param.sql;
 \i functions/path_info_to_public_function.sql;
 \i functions/validate_identifier.sql;
+\i functions/get_cgi_param_value.sql;
+\i functions/get_env_var.sql
+\i functions/get_request_id.sql
+\i functions/get_query_value.sql;
