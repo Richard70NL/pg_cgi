@@ -1,3 +1,5 @@
+-------------------------------------------------------------------------------
+
 create or replace function cgi.print(content text) returns void as $$
 declare
 begin
@@ -5,3 +7,14 @@ begin
     values(content, false);
 end;
 $$ language plpgsql;
+
+-------------------------------------------------------------------------------
+
+create or replace function cgi.print(content text, variadic var anyarray) returns void as $$
+declare
+begin
+  perform cgi.print(format(content, variadic var));
+end;
+$$ language plpgsql;
+
+-------------------------------------------------------------------------------
