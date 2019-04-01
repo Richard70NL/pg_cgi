@@ -2,12 +2,9 @@ language: rust
 cache: cargo
 
 script:
-  - cargo build --verbose --target $TARGET
-  - cargo build --verbose --target $TARGET --features debug_utils
-  - cargo build --verbose --target $TARGET --release
-
-before_script:
-  - rustup target add $TARGET
+  - cargo build --verbose
+  - cargo build --verbose --features debug_utils
+  - cargo build --verbose --release
 
 rust:
   - stable
@@ -16,18 +13,8 @@ rust:
 
 os:
   - osx
-    - env: TARGET=x86_64-apple-darwin
   - windows
-    - env: TARGET=x86_64-pc-windows-gnu
-    - env: TARGET=x86_64-pc-windows-msvc
   - linux
-    - env: TARGET=x86_64-sun-solaris
-    - env: TARGET=x86_64-unknown-cloudabi
-    - env: TARGET=x86_64-unknown-freebsd
-    - env: TARGET=x86_64-unknown-linux-gnu
-    - env: TARGET=x86_64-unknown-linux-musl
-    - env: TARGET=x86_64-unknown-netbsd
-    - env: TARGET=x86_64-unknown-redox
 
 matrix:
   allow_failures:
