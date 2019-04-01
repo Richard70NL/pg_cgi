@@ -1,8 +1,9 @@
 language: rust
 
 script:
-  - cargo build --verbose
-  - cargo build --verbose --features debug_utils
+  - cargo build --verbose --target $TARGET
+  - cargo build --verbose --target $TARGET --features debug_utils
+  - cargo build --verbose --target $TARGET --release
 
 rust:
   - stable
