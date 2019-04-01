@@ -5,6 +5,9 @@ script:
   - cargo build --verbose --target $TARGET --features debug_utils
   - cargo build --verbose --target $TARGET --release
 
+before_script:
+  - rustup target add $TARGET
+
 rust:
   - stable
   - beta
