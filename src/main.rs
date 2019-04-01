@@ -32,7 +32,7 @@ fn get_env_var(key: &str, error_message: &str) -> String {
     match env::var(key) {
         Ok(val) => val,
         Err(_) => {
-            show_error(error_message, true);
+            show_error(error_message, "get_env_var", "", true);
             String::new() // this will not be reached since show_error exits
         }
     }
@@ -52,10 +52,9 @@ fn process_request(path_info: String) {
         match Connection::connect(connection_url, TlsMode::None) {
             Ok(conn) => process_request_db(conn),
             Err(e) => show_error(
-                &format!(
-                    "There was an error while connecting to the database:\n\t\t{}",
-                    e
-                ),
+                &e.to_string(),
+                "process_request",
+                "connect to postgresql",
                 true,
             ),
         }
@@ -66,10 +65,7 @@ fn process_request(path_info: String) {
 
 fn process_request_db(conn: Connection) {
     if let Err(e) = conn.execute("select cgi.initialize();", &[]) {
-        show_error(
-            &format!("ERROR -> process_request_db -> cgi.initialize: {}", e),
-            true,
-        )
+        show_error(&e.to_string(), "process_request_db", "cgi.initialize", true)
     }
 
     insert_env_variables(&conn);
@@ -84,12 +80,13 @@ fn process_request_db(conn: Connection) {
         match env::var("PATH_INFO") {
             Ok(val) => {
                 if val == "/pg_show_all" {
-                    match conn.execute("select cgi.pg_show_all();", &[]) {
-                        Err(e) => show_error(
-                            &format!("ERROR -> process_request_db -> cgi.pg_show_all: {}", e),
+                    if let Err(e) = conn.execute("select cgi.pg_show_all();", &[]) {
+                        show_error(
+                            &e.to_string(),
+                            "process_request_db",
+                            "cgi.pg_show_all",
                             true,
-                        ),
-                        Ok(_) => (),
+                        )
                     };
                     do_handle_request = true;
                 }
@@ -101,7 +98,9 @@ fn process_request_db(conn: Connection) {
     if do_handle_request {
         if let Err(e) = conn.execute("select cgi.handle_request();", &[]) {
             show_error(
-                &format!("ERROR -> process_request_db -> cgi.handle_request: {}", e),
+                &e.to_string(),
+                "process_request_db",
+                "cgi.handle_request",
                 true,
             )
         }
@@ -110,10 +109,7 @@ fn process_request_db(conn: Connection) {
     output_response_content(&conn);
 
     if let Err(e) = conn.execute("select cgi.finalize();", &[]) {
-        show_error(
-            &format!("ERROR -> process_request_db -> cgi.finalize: {}", e),
-            true,
-        )
+        show_error(&e.to_string(), "process_request_db", "cgi.finalize", true)
     }
 }
 
@@ -126,10 +122,9 @@ fn insert_env_variables(conn: &Connection) {
             &[&key, &value],
         ) {
             show_error(
-                &format!(
-                    "ERROR -> insert_env_variables -> cgi.insert_cgi_param: {}",
-                    e
-                ),
+                &e.to_string(),
+                "insert_env_variables",
+                "cgi.insert_cgi_param",
                 true,
             )
         }
@@ -149,7 +144,9 @@ fn parse_query_string(conn: &Connection) {
                 &[&key, &value],
             ) {
                 show_error(
-                    &format!("ERROR -> parse_query_string -> cgi.insert_cgi_param: {}", e),
+                    &e.to_string(),
+                    "parse_query_string",
+                    "cgi.insert_cgi_param",
                     true,
                 )
             }
@@ -175,7 +172,9 @@ fn parse_form_data(conn: &Connection) {
                     &[&key, &value],
                 ) {
                     show_error(
-                        &format!("ERROR -> parse_form_data -> cgi.insert_cgi_param: {}", e),
+                        &e.to_string(),
+                        "parse_form_data",
+                        "cgi.insert_cgi_param",
                         true,
                     )
                 }
@@ -193,7 +192,9 @@ fn get_cgi_param(conn: &Connection, ptype: &str, name: &str) -> Option<String> {
     ) {
         Err(e) => {
             show_error(
-                &format!("ERROR -> get_cgi_param -> select from cgi_param: {}", e),
+                &e.to_string(),
+                "get_cgi_param",
+                "select from t_cgi_param",
                 true,
             );
             None
@@ -225,10 +226,20 @@ fn output_response_content(conn: &Connection) {
 
                 output_response_text(&conn);
             } else {
-                show_error("Only text response output is supported!", true);
+                show_error(
+                    "Only text response output is supported!",
+                    "output_response_content",
+                    "select from t_cgi_param",
+                    true,
+                );
             }
         }
-        None => show_error("Could not determine response output type!", true),
+        None => show_error(
+            "Could not determine response output type!",
+            "output_response_content",
+            "select from t_cgi_param",
+            true,
+        ),
     }
 }
 
@@ -240,10 +251,9 @@ fn output_response_headers(conn: &Connection) {
         &[],
     ) {
         Err(e) => show_error(
-            &format!(
-                "ERROR -> output_response_headers -> select from cgi_param: {}",
-                e
-            ),
+            &e.to_string(),
+            "output_response_headers",
+            "select from t_cgi_param",
             true,
         ),
         Ok(rows) => {
@@ -264,10 +274,9 @@ fn output_response_text(conn: &Connection) {
         &[],
     ) {
         Err(e) => show_error(
-            &format!(
-                "ERROR -> output_response_text -> select from cgi_response_text: {}",
-                e
-            ),
+            &e.to_string(),
+            "output_response_text",
+            "select from cgi_response_text",
             true,
         ),
         Ok(rows) => {
@@ -290,16 +299,36 @@ fn output_response_text(conn: &Connection) {
 }
 /************************************************************************************************/
 
-fn show_error(message: &str, terminate: bool) {
-    println!("Status: 500 Internal Server Error");
-    println!("Content-type: text/plain");
-    println!();
-    println!(
-        "pgCGI could not process your request due to the following problem:\n\t{}",
-        message
-    );
-
+fn show_error(message: &str, cgi_side: &str, psql_side: &str, terminate: bool) {
     eprintln!("ERROR: {}", message);
+
+    println!("Status: 500 Internal Server Error");
+    println!("Content-type: text/html");
+    println!();
+
+    println!("<!DOCTYPE html>");
+    print!("<html>");
+
+    print!("<head>");
+    print!("<meta charset=\"UTF-8\">");
+    print!("<title>pgCGI Error</title>");
+    print!("</head>");
+
+    print!("<body>");
+
+    print!("<h1>pgCGI Error</h1>");
+
+    print!("<dl>");
+    print!("<dt>message:</dt>");
+    print!("<dd>{}</dd>", message);
+    print!("<dt>cgi:</dt>");
+    print!("<dd>{}</dd>", cgi_side);
+    print!("<dt>psql:</dt>");
+    print!("<dd>{}</dd>", psql_side);
+    print!("</dl>");
+
+    print!("</body>");
+    print!("</html>");
 
     if terminate {
         exit(0);
