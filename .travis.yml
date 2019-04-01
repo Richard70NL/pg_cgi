@@ -14,16 +14,13 @@ rust:
   - beta
   - nightly
 
-matrix:
-  allow_failures:
-    - rust: nightly
-  include:
+os:
+  - osx
     - env: TARGET=x86_64-apple-darwin
-      os: osx
+  - windows
     - env: TARGET=x86_64-pc-windows-gnu
-      os: windows
     - env: TARGET=x86_64-pc-windows-msvc
-      os: windows
+  - linux
     - env: TARGET=x86_64-sun-solaris
     - env: TARGET=x86_64-unknown-cloudabi
     - env: TARGET=x86_64-unknown-freebsd
@@ -31,3 +28,7 @@ matrix:
     - env: TARGET=x86_64-unknown-linux-musl
     - env: TARGET=x86_64-unknown-netbsd
     - env: TARGET=x86_64-unknown-redox
+
+matrix:
+  allow_failures:
+    - rust: nightly
