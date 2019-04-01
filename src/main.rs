@@ -65,18 +65,18 @@ fn process_request(path_info: String) {
 /************************************************************************************************/
 
 fn process_request_db(conn: Connection) {
-    match conn.execute("select cgi.initialize();", &[]) {
-        Err(e) => show_error(
+    if let Err(e) = conn.execute("select cgi.initialize();", &[]) {
+        show_error(
             &format!("ERROR -> process_request_db -> cgi.initialize: {}", e),
             true,
-        ),
-        Ok(_) => (),
+        )
     }
 
     insert_env_variables(&conn);
     parse_query_string(&conn);
     parse_form_data(&conn);
 
+    #[allow(unused_mut)]
     let mut do_handle_request = true;
 
     #[cfg(feature = "debug_utils")]
@@ -91,7 +91,7 @@ fn process_request_db(conn: Connection) {
                         ),
                         Ok(_) => (),
                     };
-                    do_handle_request = false;
+                    do_handle_request = true;
                 }
             }
             Err(_) => () // do nothing,
@@ -99,23 +99,21 @@ fn process_request_db(conn: Connection) {
     }
 
     if do_handle_request {
-        match conn.execute("select cgi.handle_request();", &[]) {
-            Err(e) => show_error(
+        if let Err(e) = conn.execute("select cgi.handle_request();", &[]) {
+            show_error(
                 &format!("ERROR -> process_request_db -> cgi.handle_request: {}", e),
                 true,
-            ),
-            Ok(_) => (),
+            )
         }
     }
 
     output_response_content(&conn);
 
-    match conn.execute("select cgi.finalize();", &[]) {
-        Err(e) => show_error(
+    if let Err(e) = conn.execute("select cgi.finalize();", &[]) {
+        show_error(
             &format!("ERROR -> process_request_db -> cgi.finalize: {}", e),
             true,
-        ),
-        Ok(_) => (),
+        )
     }
 }
 
@@ -123,18 +121,17 @@ fn process_request_db(conn: Connection) {
 
 fn insert_env_variables(conn: &Connection) {
     for (key, value) in env::vars() {
-        match conn.execute(
+        if let Err(e) = conn.execute(
             "select cgi.insert_cgi_param('env', $1, $2);",
             &[&key, &value],
         ) {
-            Err(e) => show_error(
+            show_error(
                 &format!(
                     "ERROR -> insert_env_variables -> cgi.insert_cgi_param: {}",
                     e
                 ),
                 true,
-            ),
-            Ok(_) => (),
+            )
         }
     }
 }
@@ -142,56 +139,48 @@ fn insert_env_variables(conn: &Connection) {
 /************************************************************************************************/
 
 fn parse_query_string(conn: &Connection) {
-    match env::var("QUERY_STRING") {
-        Ok(query) => {
-            for pair in parse(query.as_bytes()) {
-                let key = pair.0.to_string();
-                let value = pair.1.to_string();
+    if let Ok(query) = env::var("QUERY_STRING") {
+        for pair in parse(query.as_bytes()) {
+            let key = pair.0.to_string();
+            let value = pair.1.to_string();
 
-                match conn.execute(
-                    "select cgi.insert_cgi_param('query', $1, $2);",
-                    &[&key, &value],
-                ) {
-                    Err(e) => show_error(
-                        &format!("ERROR -> parse_query_string -> cgi.insert_cgi_param: {}", e),
-                        true,
-                    ),
-                    Ok(_) => (),
-                }
+            if let Err(e) = conn.execute(
+                "select cgi.insert_cgi_param('query', $1, $2);",
+                &[&key, &value],
+            ) {
+                show_error(
+                    &format!("ERROR -> parse_query_string -> cgi.insert_cgi_param: {}", e),
+                    true,
+                )
             }
         }
-        Err(_) => (),
     }
 }
 
 /************************************************************************************************/
 
 fn parse_form_data(conn: &Connection) {
-    match env::var("CONTENT_TYPE") {
-        Ok(content_type) => {
-            if content_type == "application/x-www-form-urlencoded" {
-                let mut stdin = io::stdin();
-                let mut buffer = String::new();
-                let _res = stdin.read_to_string(&mut buffer);
+    if let Ok(content_type) = env::var("CONTENT_TYPE") {
+        if content_type == "application/x-www-form-urlencoded" {
+            let mut stdin = io::stdin();
+            let mut buffer = String::new();
+            let _res = stdin.read_to_string(&mut buffer);
 
-                for pair in parse(buffer.as_bytes()) {
-                    let key = pair.0.to_string();
-                    let value = pair.1.to_string();
+            for pair in parse(buffer.as_bytes()) {
+                let key = pair.0.to_string();
+                let value = pair.1.to_string();
 
-                    match conn.execute(
-                        "select cgi.insert_cgi_param('form', $1, $2);",
-                        &[&key, &value],
-                    ) {
-                        Err(e) => show_error(
-                            &format!("ERROR -> parse_form_data -> cgi.insert_cgi_param: {}", e),
-                            true,
-                        ),
-                        Ok(_) => (),
-                    }
+                if let Err(e) = conn.execute(
+                    "select cgi.insert_cgi_param('form', $1, $2);",
+                    &[&key, &value],
+                ) {
+                    show_error(
+                        &format!("ERROR -> parse_form_data -> cgi.insert_cgi_param: {}", e),
+                        true,
+                    )
                 }
             }
         }
-        Err(_) => (),
     }
 }
 
@@ -232,7 +221,7 @@ fn output_response_content(conn: &Connection) {
                 }
 
                 output_response_headers(&conn);
-                println!("");
+                println!();
 
                 output_response_text(&conn);
             } else {
@@ -293,7 +282,7 @@ fn output_response_text(conn: &Connection) {
                 let new_line: bool = row.get("f_new_line");
                 print!("{}", content);
                 if new_line {
-                    println!("");
+                    println!();
                 }
             }
         }
@@ -304,7 +293,7 @@ fn output_response_text(conn: &Connection) {
 fn show_error(message: &str, terminate: bool) {
     println!("Status: 500 Internal Server Error");
     println!("Content-type: text/plain");
-    println!("");
+    println!();
     println!(
         "pgCGI could not process your request due to the following problem:\n\t{}",
         message
@@ -323,7 +312,7 @@ fn redirect_to(location: String) {
     println!("Status: 301 Moved Permanently");
     println!("Location: {}", location);
     println!("Content-type: text/plain");
-    println!("");
+    println!();
     println!("Please redirect to: {}", location);
 }
 
@@ -332,7 +321,7 @@ fn redirect_to(location: String) {
 fn show_hello_world() {
     println!("Status: 200 OK");
     println!("Content-type: text/plain");
-    println!("");
+    println!();
     println!("pgCGI says: Hello, world!");
 }
 
