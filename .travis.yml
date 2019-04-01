@@ -10,27 +10,23 @@ rust:
   - beta
   - nightly
 
+os:
+  - osx
+  - windows
+  - linux
+
+env:
+  - TARGET=x86_64-apple-darwin
+  - TARGET=x86_64-pc-windows-gnu
+  - TARGET=x86_64-pc-windows-msvc
+  - TARGET=x86_64-sun-solaris
+  - TARGET=x86_64-unknown-cloudabi
+  - TARGET=x86_64-unknown-freebsd
+  - TARGET=x86_64-unknown-linux-gnu
+  - TARGET=x86_64-unknown-linux-musl
+  - TARGET=x86_64-unknown-netbsd
+  - TARGET=x86_64-unknown-redox
+
 matrix:
   allow_failures:
     - rust: nightly
-  include:
-    - env: TARGET=i686-apple-darwin
-      os: osx
-    - env: TARGET=i686-linux-android
-    - env: TARGET=i686-pc-windows-gnu
-      os: windows
-    - env: TARGET=i686-pc-windows-msvc
-      os: windows
-    - env: TARGET=i686-unknown-freebsd
-    - env: TARGET=i686-unknown-linux-gnu
-    - env: TARGET=i686-unknown-linux-musl
-    - env: TARGET=x86_64-apple-darwin
-      os: osx
-    - env: TARGET=x86_64-pc-windows-gnu
-      os: windows
-    - env: TARGET=x86_64-pc-windows-msvc
-      os: windows
-    - env: TARGET=x86_64-sun-solaris
-    - env: TARGET=x86_64-unknown-freebsd
-    - env: TARGET=x86_64-unknown-linux-gnu
-    - env: TARGET=x86_64-unknown-linux-musl
