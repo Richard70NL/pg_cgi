@@ -13,8 +13,8 @@ rust:
 
 os:
   - osx
-  - windows
   - linux
+  - windows
 
 matrix:
   allow_failures:

@@ -325,6 +325,12 @@ fn show_error(message: &str, cgi_side: &str, psql_side: &str, terminate: bool) {
     print!("<dd>{}</dd>", cgi_side);
     print!("<dt>psql:</dt>");
     print!("<dd>{}</dd>", psql_side);
+    print!("<dt>pgCGI version:</dt>");
+    print!(
+        "<dd>{} v{}</dd>",
+        env!("CARGO_PKG_NAME"),
+        env!("CARGO_PKG_VERSION")
+    );
     print!("</dl>");
 
     print!("</body>");
